@@ -9,18 +9,43 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { SectionHeader } from "./Services";
+import { submitContact } from "@/lib/api/contact.functions";
 
 export function Contact() {
   const [submitting, setSubmitting] = useState(false);
+  const [service, setService] = useState("");
+  const [budget, setBudget] = useState("");
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+
+    const form = e.currentTarget;
+    const get = (name: string) =>
+      (form.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement)?.value ?? "";
+
+    try {
+      await submitContact({
+        data: {
+          name: get("name"),
+          email: get("email"),
+          phone: get("phone") || undefined,
+          business: get("business") || undefined,
+          service: service || undefined,
+          budget: budget || undefined,
+          description: get("desc"),
+        },
+      });
       toast.success("Thanks! I'll get back to you within 24 hours.");
-      (e.target as HTMLFormElement).reset();
-    }, 900);
+      form.reset();
+      setService("");
+      setBudget("");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      toast.error(`Something went wrong: ${msg}. Please email me directly.`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -55,13 +80,13 @@ export function Contact() {
 
           <form onSubmit={onSubmit} className="lg:col-span-3 rounded-3xl glass-strong p-6 md:p-8">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Your name" id="name"><Input id="name" required placeholder="Jane Doe" /></Field>
-              <Field label="Email" id="email"><Input id="email" type="email" required placeholder="jane@company.com" /></Field>
-              <Field label="Phone" id="phone"><Input id="phone" type="tel" placeholder="+91 99999 99999" /></Field>
-              <Field label="Business name" id="business"><Input id="business" placeholder="Acme Inc." /></Field>
+              <Field label="Your name" id="name"><Input id="name" name="name" required placeholder="Jane Doe" /></Field>
+              <Field label="Email" id="email"><Input id="email" name="email" type="email" required placeholder="jane@company.com" /></Field>
+              <Field label="Phone" id="phone"><Input id="phone" name="phone" type="tel" placeholder="+91 99999 99999" /></Field>
+              <Field label="Business name" id="business"><Input id="business" name="business" placeholder="Acme Inc." /></Field>
 
               <Field label="Service required" id="service">
-                <Select>
+                <Select value={service} onValueChange={setService}>
                   <SelectTrigger><SelectValue placeholder="Select a service" /></SelectTrigger>
                   <SelectContent>
                     {["Website Development","SEO & Growth","Mobile App","AI Automation","E-commerce","Maintenance"].map(s=>(
@@ -71,7 +96,7 @@ export function Contact() {
                 </Select>
               </Field>
               <Field label="Project budget" id="budget">
-                <Select>
+                <Select value={budget} onValueChange={setBudget}>
                   <SelectTrigger><SelectValue placeholder="Estimated budget" /></SelectTrigger>
                   <SelectContent>
                     {["Under ₹50k","₹50k – ₹2L","₹2L – ₹5L","₹5L – ₹15L","₹15L+"].map(s=>(
@@ -84,7 +109,7 @@ export function Contact() {
 
             <div className="mt-4">
               <Field label="Project description" id="desc">
-                <Textarea id="desc" required rows={5} placeholder="Tell me about your goals, audience, and timeline…" />
+                <Textarea id="desc" name="desc" required rows={5} placeholder="Tell me about your goals, audience, and timeline…" />
               </Field>
             </div>
 
