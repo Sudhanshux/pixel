@@ -37,7 +37,7 @@ export const submitContact = createServerFn({ method: "POST" })
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Bytingo <enquiry@send.bytingo.com>",
+        from: "Bytingo <enquiry@bytingo.com>",
         to: ["contact.bytingo@gmail.com"],
         reply_to: data.email,
         subject: `New enquiry from ${data.name}`,
